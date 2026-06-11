@@ -1,9 +1,11 @@
 # 🌍 FIFA World Cup Simulator (WCS)
 
 A full Monte Carlo simulation engine for the 2026 FIFA World Cup, built in Python. The games are simulated using the 
-[Dixon-Coles](https://grokipedia.com/page/DixonColes_model) model, and to estimate the parameters we fit the model
-against win/draw/loss probabilities that are either derived from **(a)** bookmaker odds (for group stage matches) 
-or **(b)** Elo ratings (for the knockout phase matches). It supports both single and multi run modes.
+[Dixon-Coles](https://grokipedia.com/page/DixonColes_model) model, with parameters fitted to match implied 
+win/loss/draw probabilities derived from either **(a)** bookmaker fair odds (for group stage matches) or **(b)** 
+calibrated Elo rankings (for knockout phase matches where no odds are available). The simulation covers the full 
+tournament from group stage through to the final, including FIFA tiebreaker rules, best 8 third-place qualification, 
+and the complete 32-team knockout bracket. Both single-run and multi-run modes are available.
 
 ## 1. Methodology
 
@@ -29,23 +31,28 @@ $$
 \end{cases}
 $$
 
-The correction parameter $\rho$ adjusts for the empirically observed over-frequency of
-0-0, 1-0, 0-1, and 1-1 scorelines relative to the independent Poisson prediction.
+The correction parameter $\rho$ is typically negative in football, reflecting two
+empirically observed patterns relative to the independent Poisson prediction:
+
+- *Draws are more frequent than expected*: the probability of 0-0 and 1-1 scorelines
+  is boosted (since $-\rho > 0$ when $\rho < 0$)
+- *One-goal wins are less frequent than expected*: the probability of 1-0 and 0-1
+  scorelines is reduced
 
 ### Deriving Win/Draw/Loss probabilities
 
-For each match we require three outcome probabilities $(p_W,\ p_D,\ p_L)$ — the probability
+For each match we require three outcome probabilities $(p_W,\ p_D,\ p_L)$: the probability
 of a home win, draw, and away win respectively. These are sourced differently depending
 on the phase of the tournament.
 
-#### a) Bookmaker Odds
+#### a) Bookmaker Odds (Group Stage)
 
 Raw bookmaker odds $o_W,\ o_D,\ o_L$ imply probabilities that sum to more than 1 due to
-the bookmaker's margin (overround). We remove this by normalising:
+the bookmaker's margin. We remove this by normalising:
 
 $$p_i = \frac{1/o_i}{\sum_{j \in \{W, D, L\}} 1/o_j}$$
 
-#### b) Elo Ratings
+#### b) Elo Ratings (Knockout Phase)
 
 Elo ratings only yield a *head-to-head win probability* for each team. The probability
 that team $A$ beats team $B$ is:
@@ -57,6 +64,7 @@ distribute the remainder proportionally:
 
 $$p_W = (1 - p_D) \cdot P(A\ \text{beats}\ B), \qquad p_L = (1 - p_D) \cdot P(B\ \text{beats}\ A)$$
 
+_Note_
 
 ### Fitting Parameters Against Bookmaker Odds
 
