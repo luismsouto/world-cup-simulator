@@ -1,58 +1,22 @@
 # 🌍 FIFA World Cup Simulator (WCS)
 
 A full Monte Carlo simulation engine for the 2026 FIFA World Cup, built in Python. The games are simulated using the 
-Dixon-Coles model, which is calibrated against bookmaker odds for the **group stage** and Elo ratings for the 
-**knockout phase**. It supports both single and multi run modes.
+[Dixon-Coles](https://grokipedia.com/page/DixonColes_model) model, and to estimate the parameters we fit the model
+against win/draw/loss probabilities that are either derived from **(a)** bookmaker odds (for group stage matches) 
+or **(b)** Elo ratings (for the knockout phase matches). It supports both single and multi run modes.
 
-## 1. Project Structure
+## 1. Methodology
 
-World Cup Simulator/
-│
-├── main.py # Entry point — orchestrates the full pipeline
-│
-├── elo_utils/
-│ ├── init.py
-│ ├── calibrate_elo.py # Calibrates raw Elo ratings against bookmaker odds
-│ ├── elo_utils.py # Loads and exposes Elo ratings
-│ └── elo_vs_bookmaker.py # Diagnostic comparison of Elo vs. bookmaker probabilities
-│
-├── models/
-│ ├── init.py
-│ ├── predict_poisson.py # Basic independent Poisson goal model
-│ └── predict_poisson_DC.py # Dixon-Coles corrected Poisson model
-│
-├── simulate/
-│ ├── init.py
-│ ├── simulate_group_stage.py # Group stage simulation logic
-│ ├── simulate_knockout_phase.py # Knockout bracket simulation logic
-│ └── third_place_combinations.py # Handles best third-place team bracket rules
-│
-├── input_data/
-│ ├── odds_input.csv # Bookmaker odds for all group stage matches
-│ ├── fifa_rankings.csv # Official FIFA rankings (used as tiebreaker)
-│ ├── elo_rankings.csv # Raw Elo ratings for all teams
-│ ├── elo_rankings_calibrated.csv # Elo ratings after bookmaker calibration
-│ └── third_place_match_combinations.csv # Valid R32 bracket assignments for best 3rds
-│
-└── output_data/
-├── elo_vs_bookmaker.csv # Diagnostic output from calibration
-├── simulation_results.csv # Latest simulation results
-└── simulation_results_.csv # Timestamped simulation snapshots
-
-## Methodology
-
-### 1. Goal Scoring Model — Dixon-Coles Poisson
+### Goal Scoring Model: Dixon-Coles
 
 Each match is modelled as a pair of independent Poisson random variables representing
 goals scored by the home and away teams. The expected goals $\lambda$ for each team
-are estimated using a **Dixon-Coles** framework.
-
-The probability of a scoreline $(i, j)$ is:
+are estimated using a Dixon-Coles framework. The probability of a scoreline $(i, j)$ is given by:
 
 $$P(X = i,\ Y = j) = \tau(\lambda_h,\ \lambda_a,\ i,\ j,\ \rho) \cdot \frac{e^{-\lambda_h} \lambda_h^i}{i!} \cdot \frac{e^{-\lambda_a} \lambda_a^j}{j!}$$
 
 where $\lambda_h$ and $\lambda_a$ are the expected goals for the home and away team
-respectively, and $\tau$ is the **Dixon-Coles low-score correction factor**:
+respectively, and $\tau$ is the Dixon-Coles low-score correction factor:
 
 $$
 \tau(\lambda_h, \lambda_a, i, j, \rho) =
@@ -68,12 +32,51 @@ $$
 The correction parameter $\rho$ adjusts for the empirically observed over-frequency of
 0-0, 1-0, 0-1, and 1-1 scorelines relative to the independent Poisson prediction.
 
-Model parameters $(\alpha_i, \beta_i, \gamma, \rho)$ — representing attack strength,
-defence strength, home advantage, and the DC correction — are fitted by **maximum
-likelihood estimation** using bookmaker implied probabilities from `odds_input.csv`
-as the target.
+### Deriving Win/Draw/Loss probabilities
 
----
+For each match we require three outcome probabilities $(p_W,\ p_D,\ p_L)$ — the probability
+of a home win, draw, and away win respectively. These are sourced differently depending
+on the phase of the tournament.
+
+#### a) Bookmaker Odds
+
+Raw bookmaker odds $o_W,\ o_D,\ o_L$ imply probabilities that sum to more than 1 due to
+the bookmaker's margin (overround). We remove this by normalising:
+
+$$p_i = \frac{1/o_i}{\sum_{j \in \{W, D, L\}} 1/o_j}$$
+
+#### b) Elo Ratings
+
+Elo ratings only yield a *head-to-head win probability* for each team. The probability
+that team $A$ beats team $B$ is:
+
+$$P(A\ \text{beats}\ B) = \frac{1}{1 + 10^{(R_B - R_A) / 400}}$$
+
+Since Elo provides no native draw probability, we allocate a fixed draw share $p_D$ and
+distribute the remainder proportionally:
+
+$$p_W = (1 - p_D) \cdot P(A\ \text{beats}\ B), \qquad p_L = (1 - p_D) \cdot P(B\ \text{beats}\ A)$$
+
+
+### Fitting Parameters Against Bookmaker Odds
+
+For each match, bookmaker odds are converted to implied probabilities $(p_H,\ p_D,\ p_A)$
+for home win, draw, and away win respectively, after normalising to remove the overround:
+
+$$p_i = \frac{1/o_i}{\sum_j 1/o_j}$$
+
+where $o_i$ is the bookmaker odd for outcome $i$.
+
+The Dixon-Coles model produces a full scoreline distribution $P(X=i,\ Y=j)$, from which
+match outcome probabilities can be recovered by marginalisation:
+
+$$\hat{p}H = \sum{i > j} P(X=i,\ Y=j), \qquad \hat{p}D = \sum{i=j} P(X=i,\ Y=j), \qquad \hat{p}A = \sum{i < j} P(X=i,\ Y=j)$$
+
+The model parameters $\boldsymbol{\theta} = (\alpha_i,\ \beta_i,\ \gamma,\ \rho)$ are then estimated
+by minimising the cross-entropy loss between the bookmaker-implied and model-implied outcome
+probabilities across all group stage matches:
+
+$$\mathcal{L}(\boldsymbol{\theta}) = -\sum_{\text{matches}} \left[ p_H \log \hat{p}_H + p_D \log \hat{p}_D + p_A \log \hat{p}_A \right]$$
 
 ### 2. Elo Rating Model — Knockout Phase
 
@@ -151,6 +154,42 @@ All key parameters are defined at the top of `main.py`:
 | `RANDOM_SEED`      | `30`                                 | NumPy random seed for reproducibility    |
 | `MODE`             | `"multi"`                            | `"single"` for verbose or `"multi"` for probabilistic |
 | `OUTPUT_DIR`       | `output_data`                        | Directory for CSV output                  |
+
+
+## 1. Project Structure
+
+**Main folder**
+- `main.py` Entry point - orchestrates the full pipeline
+
+**elo_utils**
+- `calibrate_elo.py` Calibrates raw Elo ratings against bookmaker odds
+- 
+
+│ ├── elo_utils.py # Loads and exposes Elo ratings
+│ └── elo_vs_bookmaker.py # Diagnostic comparison of Elo vs. bookmaker probabilities
+
+├── models/
+│ ├── init.py
+│ ├── predict_poisson.py # Basic independent Poisson goal model
+│ └── predict_poisson_DC.py # Dixon-Coles corrected Poisson model
+│
+├── simulate/
+│ ├── init.py
+│ ├── simulate_group_stage.py # Group stage simulation logic
+│ ├── simulate_knockout_phase.py # Knockout bracket simulation logic
+│ └── third_place_combinations.py # Handles best third-place team bracket rules
+│
+├── input_data/
+│ ├── odds_input.csv # Bookmaker odds for all group stage matches
+│ ├── fifa_rankings.csv # Official FIFA rankings (used as tiebreaker)
+│ ├── elo_rankings.csv # Raw Elo ratings for all teams
+│ ├── elo_rankings_calibrated.csv # Elo ratings after bookmaker calibration
+│ └── third_place_match_combinations.csv # Valid R32 bracket assignments for best 3rds
+│
+└── output_data/
+├── elo_vs_bookmaker.csv # Diagnostic output from calibration
+├── simulation_results.csv # Latest simulation results
+└── simulation_results_.csv # Timestamped simulation snapshots
 
 ---
 
