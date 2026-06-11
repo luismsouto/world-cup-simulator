@@ -34,8 +34,8 @@ $$
 The correction parameter $\rho$ is typically negative in football, reflecting two
 empirically observed patterns relative to the independent Poisson prediction:
 
-- *Draws are more frequent than expected*: the probability of 0-0 and 1-1 scorelines
-  is boosted (since $-\rho > 0$ when $\rho < 0$)
+- *Low-scoring draws are more frequent than expected*: the probability of 0-0 and 1-1 scorelines
+  is boosted (since normally $\rho < 0$)
 - *One-goal wins are less frequent than expected*: the probability of 1-0 and 0-1
   scorelines is reduced
 
@@ -47,157 +47,63 @@ on the phase of the tournament.
 
 #### a) Bookmaker Odds (Group Stage)
 
-Raw bookmaker odds $o_W,\ o_D,\ o_L$ imply probabilities that sum to more than 1 due to
-the bookmaker's margin. We remove this by normalising:
+For all 72 group stage matches, win/draw/loss probabilities are derived directly
+from pre-tournament bookmaker decimal odds. Raw bookmaker odds embed a profit margin
+(the vig or overround), so they are first converted to fair probabilities by
+normalising the implied probabilities to sum to 1:
 
-$$p_i = \frac{1/o_i}{\sum_{j \in \{W, D, L\}} 1/o_j}$$
+$$p_i^{\text{fair}} = \frac{1/o_i}{\sum_{k} 1/o_k}$$
 
-#### b) Elo Ratings (Knockout Phase)
+where $o_i$ are the decimal odds for each outcome $i \in \{\text{home},\ \text{draw},\ \text{away}\}$.
 
-Elo ratings only yield a *head-to-head win probability* for each team. The probability
-that team $A$ beats team $B$ is:
+The three fair probabilities are then passed to a Nelder-Mead optimiser that finds
+the values of $\lambda_h$, $\lambda_a$ and $\rho$ whose implied outcome probabilities
+— obtained by summing the Dixon-Coles score matrix over the relevant scorelines —
+best match the bookmaker-implied values:
 
-$$P(A\ \text{beats}\ B) = \frac{1}{1 + 10^{(R_B - R_A) / 400}}$$
+$$(\hat{\lambda}_h,\ \hat{\lambda}_a,\ \hat{\rho}) = \underset{\lambda_h,\ \lambda_a,\ \rho}{\arg\min}
+\sum_{i \in \{h, d, a\}} \left( P_i^{\text{DC}}(\lambda_h, \lambda_a, \rho) - p_i^{\text{fair}} \right)^2$$
 
-Since Elo provides no native draw probability, we allocate a fixed draw share $p_D$ and
-distribute the remainder proportionally:
+where $P_h^{\text{DC}}$, $P_d^{\text{DC}}$ and $P_a^{\text{DC}}$ are the home win,
+draw and away win probabilities implied by the Dixon-Coles score matrix.
 
-$$p_W = (1 - p_D) \cdot P(A\ \text{beats}\ B), \qquad p_L = (1 - p_D) \cdot P(B\ \text{beats}\ A)$$
+#### b) Calibrated Elo Ratings (Knockout Phase)
 
-_Note_
+For knockout phase matches, no bookmaker odds are available in advance since the
+matchups depend on the group stage results. Instead, win/draw/loss probabilities
+are derived from Elo ratings using the method of Xiong et al. (2016).
 
-### Fitting Parameters Against Bookmaker Odds
+The win expectancy for the home team is given by the standard Elo formula:
 
-For each match, bookmaker odds are converted to implied probabilities $(p_H,\ p_D,\ p_A)$
-for home win, draw, and away win respectively, after normalising to remove the overround:
+$$W_h = \frac{1}{1 + 10^{-dr/400}}$$
 
-$$p_i = \frac{1/o_i}{\sum_j 1/o_j}$$
+where $dr = r_h - r_a$ is the difference in Elo ratings between the home and away team.
 
-where $o_i$ is the bookmaker odd for outcome $i$.
+Since the original Elo system was designed for chess — a game with rare draws — a
+separate draw probability function is required for football. Following Xiong et al.
+(2016), the draw probability is modelled as a Gaussian function of the rating
+difference:
 
-The Dixon-Coles model produces a full scoreline distribution $P(X=i,\ Y=j)$, from which
-match outcome probabilities can be recovered by marginalisation:
+$$P(\text{draw}) = \frac{1}{\sqrt{2\pi}\,\sigma} \exp\!\left(-\frac{(dr/200)^2}{2\sigma^2}\right)$$
 
-$$\hat{p}H = \sum{i > j} P(X=i,\ Y=j), \qquad \hat{p}D = \sum{i=j} P(X=i,\ Y=j), \qquad \hat{p}A = \sum{i < j} P(X=i,\ Y=j)$$
+This formulation ensures that draws are most likely when the two teams are evenly
+matched ($dr = 0$) and decay naturally as the rating gap grows. The parameter
+$\sigma$ is calibrated by matching the peak draw probability at $dr = 0$ to the
+empirically observed draw rate in international football (~28%), giving
+$\sigma \approx 1.426$.
 
-The model parameters $\boldsymbol{\theta} = (\alpha_i,\ \beta_i,\ \gamma,\ \rho)$ are then estimated
-by minimising the cross-entropy loss between the bookmaker-implied and model-implied outcome
-probabilities across all group stage matches:
+The win and loss probabilities are then obtained by subtracting half the draw
+probability from each team's base win expectancy (Xiong et al., 2016, Equations 6--7):
 
-$$\mathcal{L}(\boldsymbol{\theta}) = -\sum_{\text{matches}} \left[ p_H \log \hat{p}_H + p_D \log \hat{p}_D + p_A \log \hat{p}_A \right]$$
+$$P(\text{home win}) = W_h - \frac{1}{2} P(\text{draw})$$
 
-### 2. Elo Rating Model — Knockout Phase
+$$P(\text{away win}) = (1 - W_h) - \frac{1}{2} P(\text{draw})$$
 
-Once the group stage is resolved, the knockout phase uses **Elo ratings** to determine
-win probabilities in each bilateral match (no draw possible after 90 minutes in knockout).
+To prevent extreme Elo gaps from producing implausible probabilities — and to ensure
+numerical stability in the Dixon-Coles parameter fitting — the three probabilities
+are bounded to realistic football ranges before being passed to the optimiser:
 
-The expected win probability for team $A$ against team $B$ is:
-
-$$P(A\ \text{beats}\ B) = \frac{1}{1 + 10^{(R_B - R_A) / 400}}$$
-
-where $R_A$ and $R_B$ are the Elo ratings of teams $A$ and $B$ respectively.
-
-Knockout matches can be resolved through:
-- **Full time (90 min)**
-- **Extra time (ET)**
-- **Penalty shootout (PSO)**
-
-Each is simulated sequentially with appropriately scaled goal expectations.
-
----
-
-### 3. Elo Calibration
-
-Raw Elo ratings are calibrated to align with bookmaker-implied win probabilities for
-the group stage matches. The calibration scales the Elo difference to minimise the
-gap between $P_{\text{Elo}}$ and $P_{\text{bookmaker}}$, improving the accuracy of
-knockout phase predictions.
-
-The calibrated ratings are stored in `elo_rankings_calibrated.csv`. Diagnostic output
-comparing raw Elo vs. bookmaker probabilities is written to `elo_vs_bookmaker.csv`.
-
----
-
-### 4. Group Stage Tiebreakers
-
-When teams finish level on points, the following criteria are applied **in order**:
-
-1. Points
-2. Goal difference
-3. Goals scored
-4. FIFA ranking (lower rank number = better)
-
-This mirrors official FIFA World Cup regulations and uses `fifa_rankings.csv` as the
-final tiebreaker input.
-
----
-
-### 5. Best Third-Place Selection
-
-In a 48-team World Cup with 12 groups of 4, the top two teams from each group
-qualify automatically. The **best 8 of the 12 third-place teams** also advance to
-the Round of 32.
-
-Third-place teams are ranked by the same criteria as the group stage tiebreaker:
-
-$$\text{Sort key} = (\text{Points},\ \text{GD},\ \text{GF},\ -\text{FIFA rank})$$
-
-The bracket slot assigned to each qualifying third-place team depends on which groups
-they came from. Valid assignments are pre-computed and stored in
-`third_place_match_combinations.csv`.
-
----
-
-## ⚙️ Configuration
-
-All key parameters are defined at the top of `main.py`:
-
-| Parameter          | Default                              | Description                               |
-|--------------------|--------------------------------------|-------------------------------------------|
-| `CSV_PATH`         | `input_data/odds_input.csv`          | Bookmaker odds for group stage matches    |
-| `FIFA_RANKINGS_CSV`| `input_data/fifa_rankings.csv`       | FIFA rankings for tiebreaking             |
-| `ELO_RATINGS_CSV`  | `input_data/elo_rankings_calibrated.csv` | Calibrated Elo ratings               |
-| `COMBINATIONS_CSV` | `input_data/third_place_match_combinations.csv` | Third-place bracket rules      |
-| `N_SIMULATIONS`    | `1`                                  | Number of Monte Carlo iterations          |
-| `RANDOM_SEED`      | `30`                                 | NumPy random seed for reproducibility    |
-| `MODE`             | `"multi"`                            | `"single"` for verbose or `"multi"` for probabilistic |
-| `OUTPUT_DIR`       | `output_data`                        | Directory for CSV output                  |
-
-
-## 1. Project Structure
-
-**Main folder**
-- `main.py` Entry point - orchestrates the full pipeline
-
-**elo_utils**
-- `calibrate_elo.py` Calibrates raw Elo ratings against bookmaker odds
-- 
-
-│ ├── elo_utils.py # Loads and exposes Elo ratings
-│ └── elo_vs_bookmaker.py # Diagnostic comparison of Elo vs. bookmaker probabilities
-
-├── models/
-│ ├── init.py
-│ ├── predict_poisson.py # Basic independent Poisson goal model
-│ └── predict_poisson_DC.py # Dixon-Coles corrected Poisson model
-│
-├── simulate/
-│ ├── init.py
-│ ├── simulate_group_stage.py # Group stage simulation logic
-│ ├── simulate_knockout_phase.py # Knockout bracket simulation logic
-│ └── third_place_combinations.py # Handles best third-place team bracket rules
-│
-├── input_data/
-│ ├── odds_input.csv # Bookmaker odds for all group stage matches
-│ ├── fifa_rankings.csv # Official FIFA rankings (used as tiebreaker)
-│ ├── elo_rankings.csv # Raw Elo ratings for all teams
-│ ├── elo_rankings_calibrated.csv # Elo ratings after bookmaker calibration
-│ └── third_place_match_combinations.csv # Valid R32 bracket assignments for best 3rds
-│
-└── output_data/
-├── elo_vs_bookmaker.csv # Diagnostic output from calibration
-├── simulation_results.csv # Latest simulation results
-└── simulation_results_.csv # Timestamped simulation snapshots
+$$P(\text{win}) \leq 0.90, \quad P(\text{loss}) \geq 0.033, \quad P(\text{draw}) \geq 0.067$$
 
 ---
 
