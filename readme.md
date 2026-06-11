@@ -1,5 +1,45 @@
+# 🌍 FIFA World Cup Simulator (WCS)
 
-## 🧠 Methodology
+A full Monte Carlo simulation engine for the 2026 FIFA World Cup, built in Python. The games are simulated using the 
+Dixon-Coles model, which is calibrated against bookmaker odds for the **group stage** and Elo ratings for the 
+**knockout phase**. It supports both single and multi run modes.
+
+## 1. Project Structure
+
+World Cup Simulator/
+│
+├── main.py # Entry point — orchestrates the full pipeline
+│
+├── elo_utils/
+│ ├── init.py
+│ ├── calibrate_elo.py # Calibrates raw Elo ratings against bookmaker odds
+│ ├── elo_utils.py # Loads and exposes Elo ratings
+│ └── elo_vs_bookmaker.py # Diagnostic comparison of Elo vs. bookmaker probabilities
+│
+├── models/
+│ ├── init.py
+│ ├── predict_poisson.py # Basic independent Poisson goal model
+│ └── predict_poisson_DC.py # Dixon-Coles corrected Poisson model
+│
+├── simulate/
+│ ├── init.py
+│ ├── simulate_group_stage.py # Group stage simulation logic
+│ ├── simulate_knockout_phase.py # Knockout bracket simulation logic
+│ └── third_place_combinations.py # Handles best third-place team bracket rules
+│
+├── input_data/
+│ ├── odds_input.csv # Bookmaker odds for all group stage matches
+│ ├── fifa_rankings.csv # Official FIFA rankings (used as tiebreaker)
+│ ├── elo_rankings.csv # Raw Elo ratings for all teams
+│ ├── elo_rankings_calibrated.csv # Elo ratings after bookmaker calibration
+│ └── third_place_match_combinations.csv # Valid R32 bracket assignments for best 3rds
+│
+└── output_data/
+├── elo_vs_bookmaker.csv # Diagnostic output from calibration
+├── simulation_results.csv # Latest simulation results
+└── simulation_results_.csv # Timestamped simulation snapshots
+
+## Methodology
 
 ### 1. Goal Scoring Model — Dixon-Coles Poisson
 
@@ -114,9 +154,5 @@ All key parameters are defined at the top of `main.py`:
 
 ---
 
-## 🚀 Usage
-
-### Installation
-
-```bash
-pip install numpy pandas scipy
+## Future improvements
+- Allow for the use of Elo ratings as the basis to simulate the entire tournament (not just knockout phase)
