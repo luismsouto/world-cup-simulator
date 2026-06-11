@@ -1,0 +1,73 @@
+match_id,group,date,time,home_team,away_team,home_odds,draw_odds,away_odds
+1,A,6/11/2026,20:00,Mexico,South Africa,1.5,4.4,9.5
+2,A,6/12/2026,3:00,South Korea,Czech Republic,2.7,3.2,2.8
+3,B,6/12/2026,20:00,Canada,Bosnia and Herzegovina,1.83,3.7,4.7
+4,D,6/13/2026,2:00,USA,Paraguay,2,3.45,4
+5,B,6/13/2026,20:00,Qatar,Switzerland,14.5,6.25,1.25
+6,C,6/13/2026,23:00,Brazil,Morocco,1.6,4,6
+7,C,6/14/2026,2:00,Haiti,Scotland,7.5,4.75,1.45
+8,D,6/14/2026,5:00,Australia,Turkey,4.8,3.7,1.8
+9,E,6/14/2026,18:00,Germany,Curacao,1.05,21,67
+10,F,6/14/2026,21:00,Netherlands,Japan,2.02,3.75,3.8
+11,E,6/15/2026,0:00,Ivory Coast,Ecuador,3.8,3,2.38
+12,F,6/15/2026,3:00,Sweden,Tunisia,1.95,3.4,4.2
+13,H,6/15/2026,17:00,Spain,Cape Verde,1.1,11.5,34
+14,G,6/15/2026,20:00,Belgium,Egypt,1.67,4,5.1
+15,H,6/15/2026,23:00,Saudi Arabia,Uruguay,7.5,4.5,1.48
+16,G,6/16/2026,2:00,Iran,New Zealand,1.9,3.5,4.33
+17,I,6/16/2026,20:00,France,Senegal,1.44,4.6,8
+18,I,6/16/2026,23:00,Iraq,Norway,15,7,1.22
+19,J,6/17/2026,2:00,Argentina,Algeria,1.4,4.75,9
+20,J,6/17/2026,5:00,Austria,Jordan,1.33,5.5,10
+21,K,6/17/2026,18:00,Portugal,DR Congo,1.29,6.5,13
+22,L,6/17/2026,21:00,England,Croatia,1.73,3.8,5
+23,K,6/17/2026,23:00,Uzbekistan,Colombia,8.5,4.6,1.41
+24,L,6/18/2026,0:00,Ghana,Panama,2,3.75,3.9
+25,A,6/18/2026,17:00,Czech Republic,South Africa,2.1,3.3,4.1
+26,B,6/18/2026,20:00,Switzerland,Bosnia and Herzegovina,1.6,4.1,6
+27,B,6/18/2026,23:00,Canada,Qatar,1.35,5,11.5
+28,A,6/19/2026,2:00,Mexico,South Korea,1.85,3.5,4.6
+29,D,6/19/2026,20:00,USA,Australia,1.76,4,5
+30,C,6/19/2026,23:00,Scotland,Morocco,4,3.3,2.1
+31,C,6/20/2026,1:30,Brazil,Haiti,1.07,17,51
+32,D,6/20/2026,4:00,Turkey,Paraguay,2.3,3.25,3.4
+33,F,6/20/2026,18:00,Netherlands,Sweden,1.72,4,5.5
+34,E,6/20/2026,21:00,Germany,Ivory Coast,1.55,4.4,6
+35,E,6/21/2026,1:00,Ecuador,Curacao,1.29,6,12
+36,F,6/21/2026,5:00,Tunisia,Japan,4.8,3.5,1.85
+37,H,6/21/2026,17:00,Spain,Saudi Arabia,1.12,10,26
+38,G,6/21/2026,20:00,Belgium,Iran,1.45,4.75,8
+39,H,6/21/2026,23:00,Uruguay,Cape Verde,1.45,4.5,8
+40,G,6/22/2026,2:00,New Zealand,Egypt,5.5,3.8,1.75
+41,J,6/22/2026,18:00,Argentina,Austria,1.65,3.8,5.5
+42,I,6/22/2026,22:00,France,Iraq,1.13,11,29
+43,I,6/23/2026,1:00,Norway,Senegal,2.15,3.5,3.6
+44,J,6/23/2026,4:00,Jordan,Algeria,5.5,3.9,1.65
+45,K,6/23/2026,18:00,Portugal,Uzbekistan,1.25,6.5,14
+46,L,6/23/2026,21:00,England,Ghana,1.35,5.25,12
+47,L,6/24/2026,0:00,Panama,Croatia,7.2,4.2,1.55
+48,K,6/24/2026,3:00,Colombia,DR Congo,1.5,4.3,8
+49,B,6/24/2026,3:00,Switzerland,Canada,2.1,3.4,3.8
+50,B,6/24/2026,20:00,Bosnia and Herzegovina,Qatar,1.6,4,6
+51,C,6/24/2026,23:00,Scotland,Brazil,8.5,5,1.4
+52,C,6/24/2026,23:00,Morocco,Haiti,1.25,6.25,13
+53,A,6/25/2026,2:00,Czech Republic,Mexico,3.9,3.4,2
+54,A,6/25/2026,2:00,South Africa,South Korea,4,3.4,2.08
+55,E,6/25/2026,21:00,Curacao,Ivory Coast,10,5.5,1.33
+56,E,6/25/2026,21:00,Ecuador,Germany,5,3.9,1.67
+57,F,6/26/2026,0:00,Tunisia,Netherlands,6.5,4.2,1.53
+58,F,6/26/2026,0:00,Japan,Sweden,2.1,3.4,3.6
+59,D,6/26/2026,3:00,Paraguay,Australia,2.2,3.3,3.4
+60,D,6/26/2026,3:00,Turkey,USA,2.75,3.4,2.55
+61,I,6/26/2026,20:00,Senegal,Iraq,1.45,4.5,8
+62,I,6/26/2026,20:00,Norway,France,4.4,3.6,1.83
+63,H,6/27/2026,1:00,Cape Verde,Saudi Arabia,2.63,3.45,2.8
+64,H,6/27/2026,1:00,Uruguay,Spain,5.5,3.9,1.65
+65,G,6/27/2026,4:00,New Zealand,Belgium,12,6,1.29
+66,G,6/27/2026,4:00,Egypt,Iran,2.4,3.1,3.6
+67,L,6/27/2026,22:00,Panama,England,13,6.5,1.25
+68,L,6/27/2026,22:00,Croatia,Ghana,1.75,3.6,5.25
+69,K,6/28/2026,0:30,Colombia,Portugal,3.45,3.4,2.15
+70,K,6/28/2026,0:30,DR Congo,Uzbekistan,2.6,3.3,2.88
+71,J,6/28/2026,3:00,Jordan,Argentina,19,7.5,1.2
+72,J,6/28/2026,3:00,Algeria,Austria,3.5,3.3,2.3
