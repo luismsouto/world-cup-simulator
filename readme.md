@@ -104,7 +104,7 @@ We follow Xiong et al. (2016) to model the draw probability as a Gaussian functi
 rating difference, to ensure draws are most likely when the two teams are evenly matched, 
 i.e. $dr = 0$:
 
-$$P(\text{draw}) = \frac{1}{\sqrt{2\pi}\,\sigma} \exp\!\left(-\frac{(dr/200)^2}{2\sigma^2}\right)$$
+$$P(\text{draw}) = \frac{1}{\sqrt{2\pi}\sigma} \exp\!\left(-\frac{(dr/200)^2}{2\sigma^2}\right)$$
 
 The parameter $\sigma$ is calibrated by matching the peak draw probability at $dr = 0$ 
 to the empirically observed draw rate in international football (~28%), giving
