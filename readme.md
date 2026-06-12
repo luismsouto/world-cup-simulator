@@ -9,7 +9,7 @@ and the complete 32-team knockout bracket. Both single-run and multi-run modes a
 
 ## 1. Methodology
 
-### Goal Scoring Model: Dixon-Coles
+### Individual Match Model: Dixon-Coles
 
 Each match is modelled as a pair of independent Poisson random variables representing goals scored by 
 the home and away teams. The expected goals $\lambda$ for each team are estimated within a Dixon-Coles 
@@ -64,8 +64,8 @@ win/draw/loss probabilities against the 72 group stage bookmaker odds, which ser
 and up-to-date signal of team quality.
 
 For each of the 72 group stage matches, we can compute both:
-- $p_i^{\text{bk}}$: the bookmaker fair probabilities (Section 2a)
-- $p_i^{\text{elo}}(\mathbf{r})$: the Elo-derived probabilities (Section 2b), which
+- $p_i^{\text{bk}}$: the bookmaker fair probabilities
+- $p_i^{\text{elo}}(\mathbf{r})$: the Elo-derived probabilities, which
   depend on the team ratings $\mathbf{r}$
 
 We introduce a per-team offset $\delta_k$ for each team $k$, such that the calibrated
@@ -75,18 +75,16 @@ function $J$, which expresses a regularized least squares problem:
 $$ \mathcal{J}(\boldsymbol{\delta}) =
 \sum_{\text{matches}} \sum_i \left(p_i^{\text{elo}} - p_i^{\text{bk}}\right)^2 + \lambda \sum_k \delta_k^2 $$
 
-with respect to $\boldsymbol{\delta}$.
 The regularisation term $\lambda \sum_k \delta_k^2$ penalises large deviations from
-the original Elo ratings, which is important given the limited training data
-(each team appears in only 3 group stage matches). The regularisation strength
+the original Elo ratings to avoid overfitting. The regularisation strength parameter
 $\lambda$ controls the trade-off between fitting the bookmaker data and staying
 anchored to the prior ratings.
 
-The optimisation is solved using L-BFGS-B with symmetric bounds
-$\delta_k \in [-400, +400]$ for all teams. After testing a range of values, we set
-$\lambda = 3 \times 10^{-6}$, which yields a *92.3% reduction in mean squared error*
-relative to the uncalibrated ratings while producing adjustments that are directionally
-consistent with current team strength. The largest corrections are shown below:
+The optimization is solved numerically using L-BFGS with symmetric bounds
+$\delta_k \in [-400, +400]$. After testing, we set $\lambda = 3 \times 10^{-6}$, 
+which yields a 92.3% reduction in mean squared error relative to the uncalibrated ratings,
+while producing adjustments that are directionally consistent with current team strength. 
+The largest corrections are shown below:
 
 | Team | Original Elo | Calibrated Elo | $\delta$ |
 |---|---|---|---|
@@ -98,25 +96,19 @@ consistent with current team strength. The largest corrections are shown below:
 | Japan | 1906 | 1838 | -69 |
 | Argentina | 2114 | 2053 | -61 |
 
-The win expectancy for the home team is given by the standard Elo formula:
+The win expectancy for the home team is given by the standard Elo formula, where 
+$dr = r_h - r_a$ is the difference in Elo ratings between the home and away team:
 
 $$W_h = \frac{1}{1 + 10^{-dr/400}}$$
 
-where $dr = r_h - r_a$ is the difference in Elo ratings between the home and away team.
-
-Since the original Elo system was designed for chess — a game with rare draws — a
-separate draw probability function is required for football. Following Xiong et al.
-(2016), the draw probability is modelled as a Gaussian function of the rating
-difference:
+We follow Xiong et al. (2016) to model the draw probability as a Gaussian function of the 
+rating difference, to ensure draws are most likely when the two teams are evenly matched, 
+i.e. $dr = 0$:
 
 $$P(\text{draw}) = \frac{1}{\sqrt{2\pi}\,\sigma} \exp\!\left(-\frac{(dr/200)^2}{2\sigma^2}\right)$$
 
-
-
-This formulation ensures that draws are most likely when the two teams are evenly
-matched ($dr = 0$) and decay naturally as the rating gap grows. The parameter
-$\sigma$ is calibrated by matching the peak draw probability at $dr = 0$ to the
-empirically observed draw rate in international football (~28%), giving
+The parameter $\sigma$ is calibrated by matching the peak draw probability at $dr = 0$ 
+to the empirically observed draw rate in international football (~28%), giving
 $\sigma \approx 1.426$.
 
 The win and loss probabilities are then obtained by subtracting half the draw
