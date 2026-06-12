@@ -94,7 +94,6 @@ The largest corrections are shown below:
 | Ecuador | 1938 | 1833 | -105 |
 | Spain | 2157 | 2087 | -70 |
 | Japan | 1906 | 1838 | -69 |
-| Argentina | 2114 | 2053 | -61 |
 
 The win expectancy for the home team is given by the standard Elo formula, where 
 $dr = r_h - r_a$ is the difference in Elo ratings between the home and away team:
@@ -109,10 +108,17 @@ $$P(\text{draw}) = \frac{1}{\sqrt{2\pi}\,\sigma} \exp\!\left(-\frac{(dr/200)^2}{
 
 The parameter $\sigma$ is calibrated by matching the peak draw probability at $dr = 0$ 
 to the empirically observed draw rate in international football (~28%), giving
-$\sigma \approx 1.426$.
+$\sigma \approx 1.426$. The win and loss probabilities are then obtained by subtracting 
+half the draw probability from each team's base win expectancy
 
-The win and loss probabilities are then obtained by subtracting half the draw
-probability from each team's base win expectancy (Xiong et al., 2016, Equations 6--7):
+
+$$P(\text{home win}) = \min\!\left(0.90,\ W_h - \frac{1}{2} P(\text{draw})\right)$$
+
+$$P(\text{away win}) = \max\!\left(0.033,\ (1 - W_h) - \frac{1}{2} P(\text{draw})\right)$$
+
+where $P(\text{draw}) = \max\!\left(0.067,\ \frac{1}{\sqrt{2\pi}\,\sigma} \exp\!\left(-\frac{(dr/200)^2}{2\sigma^2}\right)\right)$,
+
+and all three probabilities are subsequently renormalised to sum to 1.
 
 $$P(\text{home win}) = W_h - \frac{1}{2} P(\text{draw})$$
 
