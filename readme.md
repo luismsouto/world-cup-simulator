@@ -96,7 +96,8 @@ The largest corrections are shown below:
 | Japan | 1906 | 1838 | -69 |
 
 The win expectancy for the home team is given by the standard Elo formula, where 
-$dr = r_h - r_a$ is the difference in Elo ratings between the home and away team:
+$dr = \tilde{r}_h - \tilde{r}_a$ is the difference in calibrated Elo ratings between the
+home and away team:
 
 $$W_h = \frac{1}{1 + 10^{-dr/400}}$$
 
