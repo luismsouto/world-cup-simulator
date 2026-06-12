@@ -69,10 +69,10 @@ For each of the 72 group stage matches, we can compute both:
   depend on the team ratings $\mathbf{r}$
 
 We introduce a per-team offset $\delta_k$ for each team $k$, such that the calibrated
-rating is $\tilde{r}_k = r_k + \delta_k$. The offsets are found by solving the
-following regularised least squares problem:
+rating is $\tilde{r}_k = r_k + \delta_k$. The offsets are found by finding the minimum of 
+function $J$, which expresses a regularized least squares problem:
 
-$$ min \mathcal{J}(\boldsymbol{\delta}) =
+$$ \mathcal{J}(\boldsymbol{\delta}) =
 \sum_{\text{matches}} \sum_i \left(p_i^{\text{elo}} - p_i^{\text{bk}}\right)^2 + \lambda \sum_k \delta_k^2 $$
 
 with respect to $\boldsymbol{\delta}$.
