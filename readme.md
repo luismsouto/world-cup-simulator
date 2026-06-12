@@ -109,26 +109,15 @@ $$P(\text{draw}) = \frac{1}{\sqrt{2\pi}\,\sigma} \exp\!\left(-\frac{(dr/200)^2}{
 The parameter $\sigma$ is calibrated by matching the peak draw probability at $dr = 0$ 
 to the empirically observed draw rate in international football (~28%), giving
 $\sigma \approx 1.426$. The win and loss probabilities are then obtained by subtracting 
-half the draw probability from each team's base win expectancy
+half the draw probability from each team's base win expectancy, capped and floored at 
+90% and 3.3%, respectively, to ensure plausible values for $\lambda_h$ and $\lambda_a$.
 
+$$P(\text{home win}) = \min\left(0.9,\ W_h - \frac{1}{2} P(\text{draw})\right)$$
 
-$$P(\text{home win}) = \min\!\left(0.90,\ W_h - \frac{1}{2} P(\text{draw})\right)$$
+$$P(\text{away win}) = \max\left(0.033,\ (1 - W_h) - \frac{1}{2} P(\text{draw})\right)$$
 
-$$P(\text{away win}) = \max\!\left(0.033,\ (1 - W_h) - \frac{1}{2} P(\text{draw})\right)$$
+All three probabilities are subsequently re-normalized to sum to 1.
 
-where $P(\text{draw}) = \max\!\left(0.067,\ \frac{1}{\sqrt{2\pi}\,\sigma} \exp\!\left(-\frac{(dr/200)^2}{2\sigma^2}\right)\right)$,
-
-and all three probabilities are subsequently renormalised to sum to 1.
-
-$$P(\text{home win}) = W_h - \frac{1}{2} P(\text{draw})$$
-
-$$P(\text{away win}) = (1 - W_h) - \frac{1}{2} P(\text{draw})$$
-
-To prevent extreme Elo gaps from producing implausible probabilities — and to ensure
-numerical stability in the Dixon-Coles parameter fitting — the three probabilities
-are bounded to realistic football ranges before being passed to the optimiser:
-
-$$P(\text{win}) \leq 0.90, \quad P(\text{loss}) \geq 0.033, \quad P(\text{draw}) \geq 0.067$$
 
 ---
 
