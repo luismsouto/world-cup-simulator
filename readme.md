@@ -142,37 +142,29 @@ following constraints:
 $$\lambda_h > 0, \quad \lambda_a > 0, \quad \rho \in [-0.5,\ 0]$$
 
 The constraint $\rho \leq 0$ reflects the empirical finding that low-scoring draws are
-over-represented in football relative to the independent Poisson prediction. Once
-$(\hat{\lambda}_h, \hat{\lambda}_a, \hat{\rho})$ are obtained, a scoreline $(i, j)$ is
-simulated by sampling from the full Dixon-Coles score probability matrix.
+over-represented in football relative to the independent Poisson prediction.
 
----
 ## 2. Simulation
 
 ### Group Stage
 
 The group stage consists of 12 groups of 4 teams each, with every team playing the
-other three teams in their group once (a round-robin format). Each match is simulated
-by sampling a scoreline $(i, j)$ from the Dixon-Coles score probability matrix, using
-the fitted parameters $(\hat{\lambda}_h, \hat{\lambda}_a, \hat{\rho})$ derived from
-bookmaker odds.
+other three teams in their group once. Each match is simulated by sampling a scoreline 
+$(i, j)$ from the Dixon-Coles score probability matrix, using the fitted parameters
+$(\hat{\lambda}_h, \hat{\lambda}_a, \hat{\rho})$ derived from bookmaker odds. After all 
+group matches are simulated, teams are ranked within each group by points.
 
 #### Standings and Tiebreakers
 
-After all group matches are simulated, teams are ranked within each group by points
-(3 for a win, 1 for a draw, 0 for a loss). Ties in points are resolved using the
-official FIFA tiebreaker cascade:
+Ties in points are resolved using the official FIFA tiebreaker cascade, excluding 
+the conduct score criterion (yellow/red cards):
 
 1. Head-to-head points among tied teams
 2. Head-to-head goal difference among tied teams
 3. Head-to-head goals scored among tied teams
 4. Overall goal difference
 5. Overall goals scored
-6. FIFA world ranking (lower number = better)
-
-When a subset of tied teams is partially resolved by head-to-head criteria, the
-tiebreaker cascade is *restarted from Step 1* within the remaining tied sub-group
-before proceeding to overall criteria.
+6. FIFA world ranking
 
 #### Third-Place Qualification
 
@@ -182,8 +174,8 @@ difference, goals scored, FIFA ranking), applied across groups.
 
 The specific Round of 32 matchups involving third-placed teams depend on which 8
 groups they come from. The 495 possible combinations are defined in Annex C of the
-FIFA tournament regulations, and are encoded as a lookup table mapping each
-combination to a fixed bracket assignment.
+FIFA tournament regulations, and are encoded as a lookup table as an input file 
+`third_place_match_combinations.csv`, in the `input_data` folder.
 
 ---
 
