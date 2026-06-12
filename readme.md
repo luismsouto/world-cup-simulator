@@ -73,9 +73,21 @@ We introduce a per-team offset $\delta_k$ for each team $k$, such that the calib
 rating is $\tilde{r}_k = r_k + \delta_k$. The offsets are found by solving the
 following regularised least squares problem:
 
-We minimise the objective $\mathcal{L}(\boldsymbol{\delta}) = 
-\sum_{\text{matches}} \sum_{i} ( p_i^{\text{elo}} - p_i^{\text{bk}} )^2 
-+ \lambda \sum_k \delta_k^2$ with respect to $\boldsymbol{\delta}$.
+$$
+\hat{\boldsymbol{\delta}}
+=
+\operatorname*{arg\,min}_{\boldsymbol{\delta}}
+\left[
+\sum_{\text{matches}} \sum_i
+\left(
+p_i^{\text{elo}}(\mathbf{r} + \boldsymbol{\delta})
+-
+p_i^{\text{bk}}
+\right)^2
++
+\lambda \sum_k \delta_k^2
+\right]
+$$
 
 The regularisation term $\lambda \sum_k \delta_k^2$ penalises large deviations from
 the original Elo ratings, which is important given the limited training data
@@ -98,13 +110,6 @@ consistent with current team strength. The largest corrections are shown below:
 | Spain | 2157 | 2087 | -70 |
 | Japan | 1906 | 1838 | -69 |
 | Argentina | 2114 | 2053 | -61 |
-
-These adjustments are broadly consistent with expectations: USA and Ghana are
-well-known to be underrated by historical Elo, while Ecuador's rating was inflated
-by a strong qualifying campaign against South American opposition that did not
-translate to the expected performance against European and Asian teams at this
-tournament.
-
 
 The win expectancy for the home team is given by the standard Elo formula:
 
