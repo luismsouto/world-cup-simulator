@@ -74,8 +74,7 @@ rating is $\tilde{r}_k = r_k + \delta_k$. The offsets are found by solving the
 following regularised least squares problem:
 
 $$ \mathcal{L}(\boldsymbol{\delta}) =
-\sum_{\text{matches}} \sum_i \left(p_i^{\text{elo}} - p_i^{\text{bk}}\right)^2
-+ \lambda \sum_k \delta_k^2 $$
+\sum_{\text{matches}} \sum_i \left(p_i^{\text{elo}} - p_i^{\text{bk}}\right)^2 + \lambda \sum_k \delta_k^2 $$
 
 with respect to $\boldsymbol{\delta}$.
 The regularisation term $\lambda \sum_k \delta_k^2$ penalises large deviations from
