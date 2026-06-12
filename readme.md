@@ -73,22 +73,11 @@ We introduce a per-team offset $\delta_k$ for each team $k$, such that the calib
 rating is $\tilde{r}_k = r_k + \delta_k$. The offsets are found by solving the
 following regularised least squares problem:
 
-$$
-\hat{\boldsymbol{\delta}}
-=
-\operatorname*{arg\,min}_{\boldsymbol{\delta}}
-\left[
-\sum_{\text{matches}} \sum_i
-\left(
-p_i^{\text{elo}}(\mathbf{r} + \boldsymbol{\delta})
--
-p_i^{\text{bk}}
-\right)^2
-+
-\lambda \sum_k \delta_k^2
-\right]
-$$
+$$ \mathcal{L}(\boldsymbol{\delta}) =
+\sum_{\text{matches}} \sum_i \left(p_i^{\text{elo}} - p_i^{\text{bk}}\right)^2
++ \lambda \sum_k \delta_k^2 $$
 
+with respect to $\boldsymbol{\delta}$.
 The regularisation term $\lambda \sum_k \delta_k^2$ penalises large deviations from
 the original Elo ratings, which is important given the limited training data
 (each team appears in only 3 group stage matches). The regularisation strength
