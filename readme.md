@@ -119,6 +119,32 @@ $$P(\text{away win}) = \max\left(0.033,\ (1 - W_h) - \frac{1}{2} P(\text{draw})\
 
 All three probabilities are subsequently re-normalized to sum to 1.
 
+### Dixon-Coles Parameter Fitting
+
+Given the three outcome probabilities $(p_W, p_D, p_L)$ from either source above,
+the Dixon-Coles parameters $(\lambda_h, \lambda_a, \rho)$ are obtained by solving the
+following least squares problem:
+
+$$(\hat{\lambda}_h,\ \hat{\lambda}_a,\ \hat{\rho}) = \underset{\lambda_h,\ \lambda_a,\ \rho}{\arg\min}
+\sum_{i \in \{W, D, L\}} \left( P_i^{\text{DC}}(\lambda_h, \lambda_a, \rho) - p_i \right)^2$$
+
+where $P_W^{\text{DC}}$, $P_D^{\text{DC}}$ and $P_L^{\text{DC}}$ are the home win, draw
+and away win probabilities implied by the Dixon-Coles score matrix, obtained by summing
+over the relevant scorelines:
+
+$$P_W^{\text{DC}} = \sum_{i > j} P(X=i, Y=j), \quad
+P_D^{\text{DC}} = \sum_{i = j} P(X=i, Y=j), \quad
+P_L^{\text{DC}} = \sum_{i < j} P(X=i, Y=j)$$
+
+The optimisation is solved numerically using the Nelder-Mead algorithm, with the
+following constraints to ensure physically meaningful parameters:
+
+$$\lambda_h > 0, \quad \lambda_a > 0, \quad \rho \in [-0.5,\ 0]$$
+
+The constraint $\rho \leq 0$ reflects the empirical finding that low-scoring draws are
+over-represented in football relative to the independent Poisson prediction. Once
+$(\hat{\lambda}_h, \hat{\lambda}_a, \hat{\rho})$ are obtained, a scoreline $(i, j)$ is
+simulated by sampling from the full Dixon-Coles score probability matrix.
 
 ---
 
