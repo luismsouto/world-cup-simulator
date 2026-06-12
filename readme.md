@@ -59,7 +59,6 @@ where $o_i$ are the decimal odds for each outcome $i \in \{\text{home},\ \text{d
 For knockout phase matches, no bookmaker odds are available in advance since the
 matchups depend on the group stage results. Instead, win/draw/loss probabilities
 are derived from calibrated Elo ratings using the method of [Xiong et al. (2016)](https://www.researchgate.net/publication/312617531_Mathematical_Model_of_Ranking_Accuracy_and_Popularity_Promotion).
-
 Raw Elo ratings from [eloratings.net](https://www.eloratings.net/) are calibrated to adjust the 
 win/draw/loss probabilities against the 72 group stage bookmaker odds, which serve as a more accurate 
 and up-to-date signal of team quality.
@@ -73,7 +72,7 @@ We introduce a per-team offset $\delta_k$ for each team $k$, such that the calib
 rating is $\tilde{r}_k = r_k + \delta_k$. The offsets are found by solving the
 following regularised least squares problem:
 
-$$ \mathcal{L}(\boldsymbol{\delta}) =
+$$ min \mathcal{J}(\boldsymbol{\delta}) =
 \sum_{\text{matches}} \sum_i \left(p_i^{\text{elo}} - p_i^{\text{bk}}\right)^2 + \lambda \sum_k \delta_k^2 $$
 
 with respect to $\boldsymbol{\delta}$.
