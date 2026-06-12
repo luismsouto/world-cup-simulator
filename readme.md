@@ -7,9 +7,9 @@ calibrated Elo rankings (for knockout phase matches where no odds are available)
 tournament from group stage through to the final, including FIFA tiebreaker rules, best 8 third-place qualification, 
 and the complete 32-team knockout bracket. Both single-run and multi-run modes are available.
 
-## 1. Methodology
+## 1. Match Model
 
-### Individual Match Model: Dixon-Coles
+### Dixon-Coles framework
 
 Each match is modelled as a pair of independent Poisson random variables representing goals scored by 
 the home and away teams. The expected goals $\lambda$ for each team are estimated within a Dixon-Coles 
@@ -119,7 +119,7 @@ $$P(\text{away win}) = \max\left(0.033,\ (1 - W_h) - \frac{1}{2} P(\text{draw})\
 
 All three probabilities are subsequently re-normalized to sum to 1.
 
-### Dixon-Coles Parameter Fitting
+### Parameter Fitting
 
 Given the three outcome probabilities $(p_W, p_D, p_L)$ from either source above,
 the Dixon-Coles parameters $(\lambda_h, \lambda_a, \rho)$ are obtained by solving the
@@ -136,8 +136,8 @@ $$P_W^{\text{DC}} = \sum_{i > j} P(X=i, Y=j), \quad
 P_D^{\text{DC}} = \sum_{i = j} P(X=i, Y=j), \quad
 P_L^{\text{DC}} = \sum_{i < j} P(X=i, Y=j)$$
 
-The optimisation is solved numerically using the Nelder-Mead algorithm, with the
-following constraints to ensure physically meaningful parameters:
+The optimization is solved numerically using the Nelder-Mead algorithm, with the
+following constraints:
 
 $$\lambda_h > 0, \quad \lambda_a > 0, \quad \rho \in [-0.5,\ 0]$$
 
@@ -145,6 +145,103 @@ The constraint $\rho \leq 0$ reflects the empirical finding that low-scoring dra
 over-represented in football relative to the independent Poisson prediction. Once
 $(\hat{\lambda}_h, \hat{\lambda}_a, \hat{\rho})$ are obtained, a scoreline $(i, j)$ is
 simulated by sampling from the full Dixon-Coles score probability matrix.
+
+---
+## 2. Simulation
+
+### Group Stage
+
+The group stage consists of 12 groups of 4 teams each, with every team playing the
+other three teams in their group once (a round-robin format). Each match is simulated
+by sampling a scoreline $(i, j)$ from the Dixon-Coles score probability matrix, using
+the fitted parameters $(\hat{\lambda}_h, \hat{\lambda}_a, \hat{\rho})$ derived from
+bookmaker odds.
+
+#### Standings and Tiebreakers
+
+After all group matches are simulated, teams are ranked within each group by points
+(3 for a win, 1 for a draw, 0 for a loss). Ties in points are resolved using the
+official FIFA tiebreaker cascade:
+
+1. Head-to-head points among tied teams
+2. Head-to-head goal difference among tied teams
+3. Head-to-head goals scored among tied teams
+4. Overall goal difference
+5. Overall goals scored
+6. FIFA world ranking (lower number = better)
+
+When a subset of tied teams is partially resolved by head-to-head criteria, the
+tiebreaker cascade is *restarted from Step 1* within the remaining tied sub-group
+before proceeding to overall criteria.
+
+#### Third-Place Qualification
+
+The 8 best third-placed teams across all 12 groups qualify for the knockout phase.
+Third-placed teams are ranked using the same criteria as above (points, goal
+difference, goals scored, FIFA ranking), applied across groups.
+
+The specific Round of 32 matchups involving third-placed teams depend on which 8
+groups they come from. The 495 possible combinations are defined in Annex C of the
+FIFA tournament regulations, and are encoded as a lookup table mapping each
+combination to a fixed bracket assignment.
+
+---
+
+### Knockout Phase
+
+The knockout phase follows a standard single-elimination bracket from the Round of
+32 through to the Final, with a separate third-place match between the two losing
+semi-finalists.
+
+#### Match Simulation
+
+Each knockout match is simulated in three stages:
+
+1. *90 minutes*: a scoreline is sampled from the Dixon-Coles score matrix using
+   parameters derived from either bookmaker odds (if the two teams met in the group
+   stage) or calibrated Elo ratings (otherwise)
+
+2. *Extra time*: if the score is level after 90 minutes, an additional 30 minutes
+   are simulated by sampling from the Dixon-Coles matrix with scaled expected goals
+   $\lambda_h^{\text{et}} = \lambda_h \times \frac{30}{90}$ and
+   $\lambda_a^{\text{et}} = \lambda_a \times \frac{30}{90}$
+
+3. *Penalty shootout*: if the score remains level after extra time, the winner is
+   decided by a penalty shootout modelled as a fair coin flip
+
+#### Bracket Resolution
+
+The bracket is resolved dynamically round by round. The Round of 32 matchups are
+fully determined once the group stage results are known, by combining:
+
+- The group winners and runners-up from each group
+- The third-place bracket assignment from the 495-combination lookup table
+
+From the Round of 16 onward, each match is initialised only once both participants
+have been determined by the results of the preceding round.
+
+---
+
+### Monte Carlo Aggregation
+
+The full tournament — group stage and knockout phase — is simulated $N$ times
+independently. Across all simulations, the following probabilities are estimated for
+each team by counting the fraction of simulations in which the team achieves each outcome:
+
+| Metric | Description |
+|---|---|
+| 1st / 2nd / 3rd / 4th | Group stage finishing position |
+| 3rd (qualified) | Finished 3rd and qualified as one of the best 8 third-placed teams |
+| Qualify % | Finished 1st, 2nd, or qualified as best 3rd |
+| R32 / R16 / QF / SF | Reached the respective knockout round |
+| 3rd Place | Won the third-place match |
+| Final | Reached the final |
+| Champion | Won the tournament |
+
+The Dixon-Coles parameters $(\hat{\lambda}_h, \hat{\lambda}_a, \hat{\rho})$ are fitted
+once per match before the simulation loop and reused across all $N$ simulations,
+ensuring the computational cost of parameter fitting is incurred only once regardless
+of the number of simulations.
 
 ---
 
